@@ -1,0 +1,14 @@
+{
+	"name": "vibe-thrift",
+	"authors": [
+		"dhasenan"
+	],
+	"dependencies": {
+    "vibe-d:core": "0.8.1",
+		"thrift-d": "0.1.0"
+	},
+  "targetType": "library",
+	"description": "Vibe socket transport for Thrift",
+	"copyright": "Copyright © 2017, dhasenan",
+	"license": "MS-PL"
+}

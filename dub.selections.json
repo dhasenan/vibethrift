@@ -1,0 +1,14 @@
+{
+	"fileVersion": 1,
+	"versions": {
+		"eventcore": "0.8.14",
+		"libasync": "0.8.3",
+		"libevent": "2.0.2+2.0.16",
+		"memutils": "0.4.9",
+		"openssl": "1.1.5+1.0.1g",
+		"taggedalgebraic": "0.10.7",
+		"thrift-d": "0.1.0",
+		"vibe-core": "1.1.1",
+		"vibe-d": "0.8.1"
+	}
+}
