@@ -28,24 +28,13 @@ shared static this()
 
 void doclient(ushort port)
 {
-    import thrift.codegen.client;
-    import thrift.protocol.binary : TBinaryProtocol;
-    import thrift.transport.buffered : TBufferedTransport;
-    import thrift.transport.socket : TSocket;
-
-    writeln("test start");
-    auto socket = new TSocket("localhost", port);
-    auto transport = new TBufferedTransport(socket);
-    transport.open();
-    auto protocol = new TBinaryProtocol!(TBufferedTransport)(transport);
-    auto client = new TClient!(TestService)(protocol);
-    writeln("client built");
-
-    client.ping;
-
-    writeln("pong");
-
     import std.datetime: SysTime, unixTimeToStdTime, UTC;
+    import vibethrift.client : openClient;
+
+    auto client = openClient!TestService("localhost", port);
+    writeln("pinging server...");
+    client.ping;
+    writeln("pong! Checking time...");
 
     auto nowUnix = client.now;
     auto stdSeconds = unixTimeToStdTime(nowUnix.epoch_seconds);
@@ -55,7 +44,7 @@ void doclient(ushort port)
 
     writefln("Server says: %s", client.compliment("Zaphod"));
 
-    transport.close;
+    client.close;
 }
 
 void doserve(ushort port)
