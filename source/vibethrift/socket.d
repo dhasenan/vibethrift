@@ -1,19 +1,37 @@
-module vibethrift;
+module vibethrift.socket;
 
 import core.time : Duration;
 import std.exception : enforce;
 import thrift.transport.base;
 import vibe.core.net : connectTCP, TCPConnection;
+import vibe.core.stream : IOMode, Stream;
+import vibe.stream.tls;
 
+import std.stdio;
+
+/**
+ * Client Vibe socket transport.
+ */
 class TVibeSocket : TBaseTransport
 {
-    this(TCPConnection conn)
+    this(TCPConnection conn, bool upgradeSSL = false)
     {
         _conn = conn;
+        _upgradeSSL = upgradeSSL;
+        if (upgradeSSL)
+        {
+            auto ctx = createTLSContext(TLSContextKind.client);
+            _stream = createTLSStream(_conn, ctx);
+        }
+        else
+        {
+            _stream = _conn;
+        }
     }
 
-    this(string host, ushort port)
+    this(string host, ushort port, bool upgradeSSL = false)
     {
+        _upgradeSSL = upgradeSSL;
         _host = host;
         _port = port;
     }
@@ -38,6 +56,15 @@ class TVibeSocket : TBaseTransport
             throw new TTransportException("failed to open connection to remote host: " ~ e.msg);
         }
         _conn.readTimeout = _recvTimeout;
+        if (_upgradeSSL)
+        {
+            auto ctx = createTLSContext(TLSContextKind.client);
+            _stream = createTLSStream(_conn, ctx);
+        }
+        else
+        {
+            _stream = _conn;
+        }
     }
 
     override void close()
@@ -45,37 +72,46 @@ class TVibeSocket : TBaseTransport
         if (!isOpen) return;
         _conn.close();
         _conn = null;
+        _stream = null;
     }
 
-    /*
-    override size_t writeSome(in ubyte[] buf)
+    override void flush()
     {
-        enforce(isOpen, new TTransportException("Attempted to write to closed TVibeSocket"));
-        return _conn.write(buf, IOMode.once);
+        if (!isOpen) return;
+        _stream.flush;
     }
-    */
 
     override void write(in ubyte[] buf)
     {
         enforce(isOpen, new TTransportException("Attempted to write to closed TVibeSocket"));
-        _conn.write(buf);
+        _stream.write(buf);
     }
 
     override size_t read(ubyte[] buf)
     {
         enforce(isOpen, new TTransportException(
             "Cannot read if socket is not open.", TTransportException.Type.NOT_OPEN));
-        auto count = buf.length;
-        auto peek = _conn.peek;
-        if (count > peek.length) count = peek.length;
-        _conn.read(buf[0..count]);
-        return count;
+        _conn.waitForData(_recvTimeout);
+        auto len = _conn.peek.length;
+        if (len == 0) return 0;
+
+        if (len < buf.length) buf = buf[0..len];
+        _stream.read(buf);
+        return buf.length;
+    }
+
+    override void readAll(ubyte[] buf)
+    {
+        enforce(isOpen, new TTransportException(
+            "Cannot read if socket is not open.", TTransportException.Type.NOT_OPEN));
+        _stream.read(buf);
     }
 
     override bool peek()
     {
         if (!isOpen) return false;
-        return _conn.peek().length > 0;
+        auto len = _stream.peek().length;
+        return len > 0;
     }
 
     void sendTimeout(Duration value) @property
@@ -96,6 +132,8 @@ class TVibeSocket : TBaseTransport
 
 private:
     TCPConnection _conn;
+    Stream _stream;
+    bool _upgradeSSL;
     string _host;
     ushort _port;
     Duration _recvTimeout;

@@ -5,6 +5,8 @@
 	],
 	"dependencies": {
     "vibe-d:core": "0.8.1",
+    "vibe-d:stream": "0.8.1",
+    "vibe-d:tls": "0.8.1",
 		"thrift-d": "0.1.0"
 	},
   "targetType": "library",

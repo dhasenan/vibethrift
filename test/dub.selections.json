@@ -3,6 +3,7 @@
 	"versions": {
 		"botan": "1.12.9",
 		"botan-math": "1.0.3",
+		"diet-ng": "1.4.3",
 		"eventcore": "0.8.14",
 		"libasync": "0.8.3",
 		"libevent": "2.0.2+2.0.16",
@@ -11,6 +12,7 @@
 		"taggedalgebraic": "0.10.7",
 		"thrift-d": "0.1.0",
 		"vibe-core": "1.1.1",
-		"vibe-d": "0.8.1"
+		"vibe-d": "0.8.1",
+		"vibe-thrift": {"path":".."}
 	}
 }
