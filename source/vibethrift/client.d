@@ -5,6 +5,8 @@ import thrift.codegen.client : TClient;
 /**
  * Create and open a client.
  *
+ * This is purely a convenience thing; you can do everything manually.
+ *
  * The default TClient doesn't include a way to close it.  This yields a wrapper that can be closed,
  * but that conflicts with RPC methods named `close`.
  *
