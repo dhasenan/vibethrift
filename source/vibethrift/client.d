@@ -18,7 +18,7 @@ Client!Service openClient(Service)(string host, ushort port)
     import thrift.transport.buffered : TBufferedTransport;
     import thrift.transport.socket : TSocket;
 
-    auto socket = new TSocket("localhost", port);
+    auto socket = new TSocket(host, port);
     auto transport = new TBufferedTransport(socket);
     transport.open();
     auto protocol = new TBinaryProtocol!(TBufferedTransport)(transport);

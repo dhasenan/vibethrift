@@ -1,5 +1,6 @@
 module testapp;
 
+import std.conv : to;
 import std.getopt;
 import std.stdio;
 import test.thrift.TestService;
@@ -10,8 +11,10 @@ alias DT = test.thrift.test_types.DateTime;
 
 shared static this()
 {
+    string host = "localhost";
     string mode = "server";
     ushort port = 7711;
+    readOption("h|host", &host, "remote host");
     readOption("m|mode", &mode, "whether to run as client or server");
     readOption("p|port", &port, "what port to use");
 
@@ -21,17 +24,17 @@ shared static this()
     }
     else
     {
-        doclient(port);
-        setTimer(2.seconds, () => doclient(port), true);
+        doclient(host, port);
+        setTimer(2.seconds, () => doclient(host, port), true);
     }
 }
 
-void doclient(ushort port)
+void doclient(string host, ushort port)
 {
     import std.datetime: SysTime, unixTimeToStdTime, UTC;
     import vibethrift.client : openClient;
 
-    auto client = openClient!TestService("localhost", port);
+    auto client = openClient!TestService(host, port);
     writeln("pinging server...");
     client.ping;
     writeln("pong! Checking time...");
@@ -57,7 +60,7 @@ class Testy : TestService
 {
     void ping()
     {
-        writeln("pinged");
+        writeln("pinged from " ~ remoteAddress.to!string);
     }
 
     DT now()
@@ -74,6 +77,7 @@ class Testy : TestService
 
     string compliment(string name)
     {
-        return "You're lovely, " ~ name ~ ", absolutely adorable.";
+        return "You're lovely, " ~ name ~ ", absolutely adorable. " ~
+            "And you're calling from " ~ remoteAddress.to!string;
     }
 }

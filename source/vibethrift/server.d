@@ -20,6 +20,7 @@ module vibethrift.server;
 
 import std.stdio;
 
+import core.thread : Fiber;
 import core.time : seconds, Duration;
 import std.exception : enforce;
 import std.variant : Variant;
@@ -33,6 +34,7 @@ import thrift.server.transport.base;
 import thrift.transport.base;
 import thrift.util.cancellation;
 
+import vibe.core.core;
 import vibe.core.net;
 import vibe.core.stream;
 import vibe.core.sync;
@@ -54,6 +56,11 @@ void serve(Service)(Service service, string bindAddress, ushort port)
     auto server = new TVibeBinaryServer(processor, bindAddress, port);
     server.serve();
 }
+
+/**
+ * The client's IP address.
+ */
+TaskLocal!NetworkAddress remoteAddress;
 
 /**
  * A Vibe-specific server that doesn't block you to the end of time.
@@ -80,6 +87,11 @@ class TVibeBinaryServer : TServer
 
     void newConnection(TCPConnection conn)
     {
+        // We have one handler fiber for each connection, so we can just set this here.
+        // It won't interfere with other handlers.
+        remoteAddress = conn.remoteAddress;
+        scope (exit) remoteAddress = NetworkAddress.init;
+
         auto client = new TVibeSocket(conn);
         TTransport inputTransport;
         TTransport outputTransport;
